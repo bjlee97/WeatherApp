@@ -1,63 +1,52 @@
-let lat = 0;                    // Create the variable for latitude
-let long = 0;                   // Create the variable for longitude
-
-window.onload = function() {
-    const date = new Date();
-    const dateString = (date.getMonth() + 1) + '/' + date.getDate() +      '/' + date.getFullYear();
-    document.getElementById('date').innerHTML = dateString;
-    // Now, set the .date HTML text to our dateString
-
-    if ("geolocation" in navigator) {   //if browser supports location
-        navigator.geolocation.getCurrentPosition(success)   //call success function
-        //collects a lot of information
-    } 
-    
-    else {                              //if not supported
-      console.log("Geolocation is not available in your browser."); //report error message
-    }    
+let latitude = 0;                                               //initialize lat
+let longitude = 0;                                              //iniitalize lon
+window.onload = function() {                                    //When the window loads (when the page loads)
+    const date = new Date();                                    //Outputs our date in MM/DD/YYYY
+    const dateString = (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+    document.getElementById('date').innerHTML = dateString;     // Now, set the .date HTML text to our dateString
+    if ("geolocation" in navigator) {                           // If the browser supports location
+		navigator.geolocation.getCurrentPosition(success)       //Get position and call 'success' function
+	} else {                                                    // If location does not exist, or if we deny permission
+	  console.log("Geolocation is not available in your browser.");
+	}
 }
 
-function success(position){         //enable permissions
-	lat = position.coords.latitude;    //redefine lat
-	long = position.coords.longitude;  //redefine long
-    console.log(lat,long)
-	// Print out the latitude and longitude to see if it works!
+function success(position){
+	latitude = position.coords.latitude;
+	longitude = position.coords.longitude;
+    console.log(latitude, longitude);                           // Print out the latitude and longitude to see if it works!
+
 }
-    
-const btn = document.getElementById('getWeatherBtn')
+const btn = document.getElementById('getWeatherBtn');
+btn.addEventListener("click", function(){
 
-btn.addEventListener("click", () => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("GET", `localhost:3000/weather/${lat}/${long}`); //We change this later (What are we calling if we want to get the current weather data)
-    xhr.send();
+  // ----------------- CURRENT ----------------- (xhr)
+  const xhr = new XMLHttpRequest();                             // Defines the XMLHttp object
+  xhr.open("GET", `http://localhost:3000/weather/${latitude}/${longitude}`); // opens a get request to the website
+  xhr.send();                                                   // sends the request
 
-    xhr.onload = function() {
-        //What’s wrong w/ this (Think about the format responseText is in and what format we need it in (stringify/parse)
-        const body = JSON.parse(xhr.responseText);
-        let temperature = body.temperature;
-        let weatherStatus = body.weatherStatus;
-        document.getElementById("temperature").innerHTML = `Temperature: ${temperature}°F`
-        document.getElementById("weatherStatus").innerHTML = `Weather Status: ${weatherStatus}`
+  xhr.onload = function(){                                      // Once we get a response
+                                                                // Body will look like this: {temperature: 52, weatherStatus: "Clouds"}
+    const body = JSON.parse(xhr.responseText);                  // Set body to the response text
+    let temperature = body.temperature;                         // Parse the temperature from the response
+    let weatherStatus = body.weatherStatus;                     // Parse the weatherStatus from the response
+    document.getElementById('temperature').innerHTML = `Temperature: ${temperature} F`; // Set the temperature HTML text to the temperature
+    document.getElementById('weatherStatus').innerHTML = `weatherStatus: ${weatherStatus}`; // Set the weatherStatus HTML text to the weatherStatus
+  }
+
+  // ----------------- 5-DAY FORECAST ----------------- (xhr2)
+
+  const xhr2 = new XMLHttpRequest();                            // Defines the XMLHttp object
+  xhr2.open("GET", `http://localhost:3000/5day/${latitude}/${longitude}`); // opens a get request to the website
+  xhr2.send();                                                  // sends the request
+
+  xhr2.onload = function(){                                     // Once we get a response
+    const body = JSON.parse(xhr2.responseText);
+    let forecast = body;                                        // Parse the forecast from the response, we now have a list of 5 day/temperature pairs
+    // forecast = [{Monday: 52}, {Tuesday: 53}, {Wednesday: 54}, {Thursday: 55}, {Friday: 56}}]
+    let forecastElements = document.getElementsByClassName("forecast"); // Setting forecastElements to an array of divs with the class 'forecast' (5 in this case): [first div, second div, third div]
+    for (let i = 0; i < forecast.length; i++){
+      forecastElements[i].innerHTML = forecast[i].dayName + ": " + forecast[i].temp + "\u00B0F";
     }
-
-    const xhr2 = new  XMLHttpRequest();
-    xhr2.open("GET", `http://localhost:3000/weather/${lat}/${lon}`);
-    xhr2.send();
-
-    xhr2.onload = function() {
-        const body = JSON.parse(xhr2.responseText)
-        var forecast = body.forecast //Remember: this is a list
-        var forecastElements = document.getElementsByClassName("forecast");
-        for (var i = 0; i < forecast.length; i++) {
-            forecastElements[i].innerHTML = `${forecast[i].dayName}: ${forecast[i].temp} \u00B0 F`;
-    }
-    }
-    
-
-    let forecast = [["M", 52], ["Tu", 53], ["W", 54], ["Th", 55], ["F", 56]]
-    let forecastElements = document.getElementsByClassName("forecast");
-    for (let i = 0; i < forecast.length; i++) {
-        forecastElements[i].innerHTML = forecast[i][0] + ": " + forecast[i][1] + "\u00B0 F";
-      }
-});
-
+  }
+})
