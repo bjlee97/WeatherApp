@@ -50,7 +50,7 @@ app.get('/5day/:lat/:lon', (req, res) => {
 		                                                    //console.log(body.main.temp);
 
 		todaysDate = new Date().getDay();                   //get today's date,return a num 0-6
-		const week =['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'];
+		const week =['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday', 'Saturday'];
 		let forecast = [];
 
 		for(let i=0; i < 5; i++){                           //0 1 2 3 4
